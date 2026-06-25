@@ -1,9 +1,11 @@
 ---
-name: vibemotion
+name: vibemotion-hyperframes
 description: 用 HyperFrames + GSAP 做 Claude 设计风格的科普/包装短视频时使用。提供三套已验证的可复用主题——紫色镀铬玻璃(purple-glass)、暖色衬线(warm-serif，即 Claude Design)、复古像素(pixel-arcade)——共用结构契约、确定性铁律与动效原则。画幅(横屏/竖屏/方屏)按用户或平台选，不写死。含「联网找 CC0 素材/logo/字体」方法。需要做代码动画、概念讲解、产品包装、像素转场类视频，或问"用 HF/GSAP 怎么做某风格的视频"时触发。
 ---
 
-# vibemotion · Claude 视频套件（HyperFrames + GSAP）
+# vibemotion-hyperframes · Claude 视频套件（HyperFrames + GSAP）
+
+> 昵称 **vibemotion-hyperframes**（纯代码图形片）。姊妹技能 **vibemotion-remotion**（Remotion，素材重/OCR/批量）。
 
 把"Claude 设计风格的纯代码视频"封装成可复用底板。**核心引擎 HyperFrames + GSAP**（像素角色长动画也可走 GSAP + playwright 录屏，见 pixel 主题）。三套主题换皮，规则共用：
 

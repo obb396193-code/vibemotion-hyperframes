@@ -1,4 +1,6 @@
-# vibemotion
+# vibemotion-hyperframes
+
+> Sibling skill: **[vibemotion-remotion](https://github.com/obb396193-code/vibemotion-remotion)** — for material-heavy / OCR / batch videos via Remotion. This one (vibemotion-hyperframes) covers pure-code motion-graphics via HyperFrames.
 
 A reusable **Claude skill** for making "Claude-design-style, pure-code videos" — short, polished motion-graphics clips written as HTML + a paused GSAP timeline and rendered to MP4 via **HyperFrames**. One skill, three validated themes, shared rules.
 
@@ -26,7 +28,7 @@ npx hyperframes render . -o out.mp4 -w 1 --resolution portrait   # or landscape 
 ## Install
 Drop it into your skills directory:
 ```bash
-git clone https://github.com/obb396193-code/vibemotion.git ~/.claude/skills/vibemotion
+git clone https://github.com/obb396193-code/vibemotion-hyperframes.git ~/.claude/skills/vibemotion-hyperframes
 ```
 Then ask your agent to use it (e.g. "用 vibemotion 做一条 …"). It also works with the
 open skills ecosystem (`npx skills`).
