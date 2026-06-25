@@ -2,10 +2,6 @@
 
 A reusable **Claude skill** for making "Claude-design-style, pure-code videos" — short, polished motion-graphics clips written as HTML + a paused GSAP timeline and rendered to MP4 via **HyperFrames**. One skill, three validated themes, shared rules.
 
-![vibemotion demo](docs/demo.gif)
-
-> Demo: the three themes in order — **purple-glass** → **warm-serif** → **pixel-arcade**, all pure-code, rendered with HyperFrames + GSAP.
-
 > This is an **agent skill**: the entry point is [`SKILL.md`](SKILL.md), which Claude (Claude Code / compatible agents) reads to drive the workflow. The README is the human-facing overview.
 
 ## Themes
