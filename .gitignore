@@ -1,0 +1,15 @@
+# OS / editor junk
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
+# deps / build
+node_modules/
+out/
+*.log
+.env
+.env.*
+
+# rendered outputs (keep the repo light; re-render from source)
+*.mp4
+*.mov

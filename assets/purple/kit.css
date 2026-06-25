@@ -1,0 +1,76 @@
+/* ============================================================
+   高级包装套件 · kit.css   (紫色镀铬 / 玻璃拟态 / 极光底)
+   可复用底板：所有合成 <link> 这一个文件即可
+   注意：@font-face 不能放这里（外链CSS的字体路径渲染时解析不到），
+        每个合成在自己的 index.html 内联 @font-face（见 _template）。
+   ============================================================ */
+:root{
+  /* —— 色板 —— */
+  --bg0:#0a0420; --bg1:#1c0c44; --bg2:#3c1c72;
+  --vio:#9a6cff; --vio-2:#7a4cff; --vio-soft:rgba(154,108,255,.18);
+  --ink:#eef0ff; --muted:#c9c4e8; --dim:#8a82b8;
+  /* —— 字体 —— */
+  --display:"AliPuHui","PingFang SC",sans-serif; --mono:"Mono",monospace; --sans:"PingFang SC",sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:1920px;height:1080px;overflow:hidden;background:var(--bg0);}
+
+/* ---- 舞台底：紫色极光渐变 ---- */
+.prem{position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;
+  background:radial-gradient(125% 110% at 50% 38%, var(--bg2) 0%, var(--bg1) 56%, var(--bg0) 100%);}
+/* 背景层（由 kit.js 注入）：极光光斑 / 光带 / 扫描线 / 编织 / 暗角 */
+.k-aurora{position:absolute;border-radius:50%;filter:blur(120px);}
+.k-streak{position:absolute;left:6%;top:-4%;width:64%;height:240px;transform:rotate(-18deg);pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(200,180,255,.16),transparent);filter:blur(44px);}
+.k-scan{position:absolute;inset:0;pointer-events:none;z-index:38;opacity:.55;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 4px);}
+.k-weave{position:absolute;inset:0;pointer-events:none;z-index:37;opacity:.08;
+  background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.5) 0 1px,transparent 1px 5px);}
+.k-vig{position:absolute;inset:0;pointer-events:none;z-index:39;
+  background:radial-gradient(ellipse 82% 78% at 50% 46%,transparent 52%,rgba(0,0,0,.6) 100%);}
+.k-content{position:absolute;inset:0;z-index:10;}
+
+/* ---- 镀铬 3D 立体字 ---- (用 .chrome + data-text，kit.js 自动生成分层) */
+.chrome{position:relative;display:inline-block;font-family:var(--display);line-height:1;white-space:nowrap;}
+.chrome .ghost{position:relative;visibility:hidden;}
+.chrome span.lyr{position:absolute;left:0;top:0;}
+.chrome .back{color:#2a1656;filter:blur(1px);transform:translate(4px,6px);}
+.chrome .edge{color:transparent;-webkit-text-stroke:5px #221150;}
+.chrome .front{color:transparent;
+  background:linear-gradient(180deg,#f4f4ff 0%,#ffffff 30%,#aeb0d4 46%,#ffffff 50%,#5b5b86 53%,#9a9bc2 60%,#e9eaff 80%,#ffffff 100%);
+  background-size:100% 100%;
+  -webkit-background-clip:text;background-clip:text;-webkit-text-stroke:1.2px #d9d9f2;
+  filter:drop-shadow(0 2px 0 rgba(255,255,255,.9)) drop-shadow(0 0 30px rgba(165,140,255,.8)) drop-shadow(0 9px 16px rgba(0,0,0,.45));}
+
+/* ---- 玻璃拟态卡 ---- */
+.glass{position:relative;border-radius:30px;
+  background:linear-gradient(135deg,rgba(255,255,255,.10),rgba(120,90,200,.05));
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border:1px solid rgba(190,170,255,.30);
+  box-shadow:0 40px 90px rgba(10,4,32,.55),inset 0 1px 0 rgba(255,255,255,.35),inset 0 0 60px rgba(154,108,255,.06);}
+.glass::before{content:"";position:absolute;left:40px;right:40px;top:0;height:2px;border-radius:2px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);}
+
+/* ---- 玻璃胶囊按钮 ---- */
+.pill{display:flex;align-items:center;justify-content:center;border-radius:999px;
+  font-family:var(--display);color:#efeaff;
+  background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(120,90,200,.04));
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(190,170,255,.28);box-shadow:0 14px 34px rgba(10,4,32,.4),inset 0 1px 0 rgba(255,255,255,.30);}
+.pill.on{border-color:rgba(190,170,255,.7);box-shadow:0 0 30px rgba(154,108,255,.4),inset 0 1px 0 rgba(255,255,255,.4);color:#fff;}
+
+/* ---- 真人口播框 ---- (.head-frame；放视频时把 background 换成你的画面) */
+.head-frame{position:relative;border-radius:34px;overflow:hidden;
+  border:2px solid rgba(190,170,255,.5);
+  box-shadow:0 40px 90px rgba(10,4,32,.6),0 0 50px rgba(154,108,255,.25),inset 0 0 40px rgba(0,0,0,.3);
+  background:linear-gradient(160deg,#241248,#120a2c);}
+.head-frame.circle{border-radius:50%;}
+.head-frame .ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;color:var(--dim);font-family:var(--sans);}
+.head-frame .ph .cam{width:90px;height:64px;border:3px solid var(--dim);border-radius:12px;position:relative;}
+.head-frame .ph .cam::after{content:"";position:absolute;right:-26px;top:14px;border-left:26px solid var(--dim);border-top:16px solid transparent;border-bottom:16px solid transparent;}
+.head-frame .ph .rec{position:absolute;top:24px;left:24px;display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:24px;color:#ff6b6b;}
+.head-frame .ph .rec i{width:14px;height:14px;border-radius:50%;background:#ff6b6b;display:block;}
+
+/* 通用文字 */
+.k-cn{font-family:var(--display);} .k-sans{font-family:var(--sans);font-weight:300;} .k-mono{font-family:var(--mono);}
+.k-vio{color:var(--vio);}

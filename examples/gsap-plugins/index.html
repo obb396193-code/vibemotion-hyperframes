@@ -1,0 +1,49 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"/><meta name="viewport" content="width=1920,height=1080"/>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/DrawSVGPlugin.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/MorphSVGPlugin.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@hyperframes/core/dist/hyperframe.runtime.iife.js"></script>
+<style>
+@font-face{font-family:"AliPuHui";src:url("../../assets/font/AliPuHui.woff2") format("woff2");font-display:swap;}
+*{margin:0;padding:0;box-sizing:border-box;}
+#root{position:relative;width:1920px;height:1080px;overflow:hidden;background:radial-gradient(125% 110% at 50% 38%,#3c1c72,#1c0c44 56%,#0a0420);font-family:"AliPuHui";}
+.scene{position:absolute;inset:0;}
+#title{position:absolute;left:50%;top:300px;transform:translateX(-50%);font-size:150px;color:#fff;white-space:nowrap;}
+#tag{position:absolute;left:50%;top:200px;transform:translateX(-50%);font-family:monospace;font-size:30px;color:#9a6cff;letter-spacing:.3em;}
+#draw{position:absolute;left:50%;top:520px;transform:translateX(-50%);}
+.lbl{position:absolute;font-family:monospace;font-size:34px;color:#c9c4e8;}
+#morphwrap{position:absolute;left:50%;top:680px;transform:translateX(-50%);}
+</style></head><body>
+<div id="root" data-composition-id="main" data-width="1920" data-height="1080" data-start="0" data-duration="6">
+  <div class="scene clip" id="s1" data-start="0" data-duration="6" data-track-index="0">
+    <div id="tag">GSAP · 全家桶(全免费)</div>
+    <div id="title">付费插件，现已解锁</div>
+    <svg id="draw" width="700" height="80" viewBox="0 0 700 80">
+      <path id="swoosh" d="M20 50 Q 200 10 360 45 T 680 30" stroke="#9a6cff" stroke-width="8" fill="none" stroke-linecap="round"/>
+    </svg>
+    <div class="lbl" style="left:430px;top:840px">SplitText</div>
+    <div class="lbl" style="left:880px;top:840px">DrawSVG</div>
+    <div class="lbl" style="left:1300px;top:840px">MorphSVG</div>
+    <svg id="morphwrap" width="180" height="180" viewBox="0 0 100 100">
+      <path id="shape" fill="#e8a07a" d="M50,15 A35,35 0 1,1 49.9,15 Z"/>
+      <path id="starHidden" d="M50 8 L61 38 L94 38 L67 58 L77 90 L50 70 L23 90 L33 58 L6 38 L39 38 Z" style="display:none"/>
+    </svg>
+  </div>
+</div>
+<script>
+gsap.registerPlugin(SplitText, DrawSVGPlugin, MorphSVGPlugin);
+window.__timelines=window.__timelines||{};var tl=gsap.timeline({paused:true});
+// 1) SplitText 拆字
+var split=new SplitText("#title",{type:"chars"});
+tl.from("#tag",{autoAlpha:0,y:-16,duration:.5,ease:"power2.out"},0.2);
+tl.from(split.chars,{y:90,autoAlpha:0,duration:.6,ease:"back.out(1.5)",stagger:0.06},0.6);
+// 2) DrawSVG 线自绘
+tl.fromTo("#swoosh",{drawSVG:"0%"},{drawSVG:"100%",duration:1.0,ease:"power2.out"},1.6);
+// 3) MorphSVG 圆→星
+tl.to("#shape",{morphSVG:"#starHidden",duration:1.0,ease:"power3.inOut"},2.6);
+tl.to("#shape",{rotation:360,transformOrigin:"50% 50%",duration:2.0,ease:"none"},2.6);
+tl.fromTo(".lbl",{autoAlpha:0,y:14},{autoAlpha:1,y:0,duration:.4,stagger:.15,ease:"power2.out"},3.4);
+tl.to({},{duration:.6},5.8);
+window.__timelines["main"]=tl;
+</script></body></html>

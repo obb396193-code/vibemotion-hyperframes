@@ -1,0 +1,12 @@
+{
+  "name": "transformer-attention",
+  "title": "Transformer 注意力机制 · 60s 抖音科普",
+  "version": "0.1.0",
+  "composition": "index.html",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "duration": 60,
+  "engine": "hyperframes",
+  "runtime": "gsap"
+}

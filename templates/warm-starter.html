@@ -1,0 +1,33 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"/><meta name="viewport" content="width=1080,height=1920"/>
+<!-- 复制后：把 ../assets/warm/ 改成你放 warm.css/warm.js 的相对路径 -->
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;500;700&family=IBM+Plex+Mono:wght@300;500&family=Noto+Sans+SC:wght@300;500;900&family=Noto+Serif+SC:wght@300;700;900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@hyperframes/core/dist/hyperframe.runtime.iife.js"></script>
+<link rel="stylesheet" href="../assets/warm/warm.css"/>
+<script src="../assets/warm/warm.js"></script>
+<style>
+#s1-eyebrow{margin-bottom:40px;}
+#s1-title{margin-bottom:30px;}
+</style></head><body>
+<div id="root" data-composition-id="main" data-width="1080" data-height="1920" data-start="0" data-duration="5">
+  <div class="scene clip bg-dark" id="s1" data-start="0" data-duration="5" data-track-index="0">
+    <div class="scene-content">
+      <div class="label" id="s1-eyebrow">第 01 章 · 钩子</div>
+      <div class="display-xl" id="s1-title">一句话钩子</div>
+      <div class="sub-cream" id="s1-sub">用 <span class="accent">一个</span> 日常例子，讲清一个概念</div>
+    </div>
+  </div>
+</div>
+<script>
+var sc=document.getElementById('s1');
+WarmKit.mountBG(sc, [{x:-140,y:-200,size:600,op:.5},{right:-160,bottom:-180,size:520,op:.4}]);
+window.__timelines=window.__timelines||{};var tl=gsap.timeline({paused:true});
+tl.fromTo('#s1-eyebrow',{y:20,autoAlpha:0},{y:0,autoAlpha:1,duration:.6,ease:'power2.out'},0.2);
+WarmKit.charIn(tl,'#s1-title',0.6,{y:80,stagger:.05,ease:'back.out(1.4)'});
+WarmKit.F(tl,'#s1-sub',{y:40,autoAlpha:0},{autoAlpha:1,y:0,duration:.7,ease:'power3.out'},1.8);
+tl.to('#s1 .orb',{scale:1.16,duration:2.0,yoyo:true,repeat:1,ease:'sine.inOut'},0.5);   // mid-scene 呼吸
+tl.to('#s1-eyebrow',{letterSpacing:'0.42em',duration:2.6,ease:'sine.inOut'},1.0);
+tl.to({},{duration:.6},4.8);
+window.__timelines["main"]=tl;
+</script></body></html>

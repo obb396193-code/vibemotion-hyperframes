@@ -1,0 +1,52 @@
+/* ============================================================
+   Claude 暖色主题 · warm.css   (暖深 / 米色双底 · 衬线 · 暖橙强调)
+   源自 transformer-attention DESIGN.md（Claude Design 衍生）
+   用法：每个合成 <link> 这一个文件；@font-face/Google Fonts 放各自 index.html <head>
+   颜色叙事角色：橙=焦点本身 / 灰=旧·失效·静默 / 米=升华·收束
+   ============================================================ */
+:root{
+  --bg-dark:#1A1410; --bg-cream:#F5EFE6; --bg-cream-2:#EBE3D5;
+  --ink:#2C2620; --ink-soft:#5C5249; --ink-cream:#F5EFE6;
+  --accent:#CC785C; --accent-2:#E8A07A; --accent-dim:#8B4A36;
+  --muted:#8B7E72; --muted-line:#C9BFB1; --glow:rgba(204,120,92,0.45);
+  /* 字体（在 index.html <head> 里 <link> Google Fonts 后即可引用） */
+  --font-display:"DM Serif Display","Noto Serif SC",serif;
+  --font-serif:"Noto Serif SC","DM Serif Display",serif;
+  --font-sans:"Noto Sans SC","DM Sans",sans-serif;
+  --font-mono:"IBM Plex Mono",monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{overflow:hidden;background:#000;font-family:var(--font-sans);-webkit-font-smoothing:antialiased;}
+
+/* ---- 双底舞台 ---- (加在 .scene 上) */
+.bg-dark { background:radial-gradient(ellipse at 50% 40%, #2A1F18 0%, var(--bg-dark) 70%); }
+.bg-cream{ background:linear-gradient(160deg, var(--bg-cream) 0%, var(--bg-cream-2) 100%); }
+
+/* ---- 暖橙光球 / 颗粒（由 warm.js 注入，或手动放） ---- */
+.orb{position:absolute;border-radius:50%;filter:blur(60px);
+  background:radial-gradient(circle, var(--glow), transparent 70%);pointer-events:none;}
+.grain{position:absolute;inset:0;pointer-events:none;z-index:40;opacity:.06;mix-blend-mode:overlay;
+  background-image:radial-gradient(#fff 1px, transparent 1px);background-size:3px 3px;}
+.vig{position:absolute;inset:0;pointer-events:none;z-index:39;
+  background:radial-gradient(ellipse 82% 78% at 50% 46%, transparent 54%, rgba(0,0,0,.45) 100%);}
+
+/* ---- 字体梯队（字重对比拉满 300 vs 900）---- */
+.display-xl  {font-family:var(--font-display);font-weight:900;font-size:140px;line-height:1.05;letter-spacing:-.02em;color:var(--ink-cream);}
+.display-lg  {font-family:var(--font-display);font-weight:900;font-size:110px;line-height:1.08;letter-spacing:-.01em;color:var(--ink);}
+.display-md  {font-family:var(--font-serif);font-weight:700;font-size:84px;line-height:1.15;color:var(--ink);}
+.display-thin{font-family:var(--font-serif);font-weight:300;font-size:92px;line-height:1.2;color:var(--ink-cream);letter-spacing:.01em;}
+.sub        {font-family:var(--font-sans);font-weight:300;font-size:42px;line-height:1.4;color:var(--ink-soft);letter-spacing:.02em;}
+.sub-cream  {font-family:var(--font-sans);font-weight:300;font-size:42px;line-height:1.4;color:var(--ink-cream);letter-spacing:.02em;}
+.label      {font-family:var(--font-mono);font-weight:500;font-size:28px;color:var(--accent);letter-spacing:.2em;text-transform:uppercase;}
+.label-dim  {font-family:var(--font-mono);font-weight:300;font-size:28px;color:var(--muted);letter-spacing:.2em;}
+.tag        {font-family:var(--font-mono);font-weight:500;font-size:32px;color:var(--accent);
+  border:1px solid var(--accent);border-radius:999px;padding:10px 26px;display:inline-block;}
+.num        {font-family:var(--font-mono);font-variant-numeric:tabular-nums;color:var(--accent-2);}
+
+/* 强调色工具类 */
+.accent{color:var(--accent);} .accent-2{color:var(--accent-2);} .muted{color:var(--muted);}
+.glow-soft{filter:drop-shadow(0 0 40px var(--glow));}
+
+/* ---- 9:16 安全区舞台内容 ---- */
+.scene-content{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:100px 80px;text-align:center;}

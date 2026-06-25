@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SKILL 大冒险 · 像素闯关 Demo</title>
+<style>
+@font-face{
+  font-family:"Zpix";
+  src:url("assets/Zpix.ttf") format("truetype");
+  font-display:swap;
+}
+@font-face{
+  font-family:"PressStart";
+  src:url("assets/PressStart2P.woff2") format("woff2");
+  font-display:swap;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{
+  width:100%;height:100%;background:#0b0712;overflow:hidden;
+  font-family:"Zpix",monospace;
+  image-rendering:pixelated;
+}
+/* ---------- viewport scaler ---------- */
+#fit{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;}
+#stage{
+  position:relative;width:1920px;height:1080px;flex:none;
+  transform-origin:center center;
+  background:
+    linear-gradient(180deg,#241a3a 0%,#3a2a5c 35%,#6d3f78 62%,#c66b5a 84%,#f2a25c 100%);
+  overflow:hidden;
+  image-rendering:pixelated;
+}
+/* ---------- sky decor (CSS pixel blocks, drifting) ---------- */
+.star{position:absolute;width:6px;height:6px;background:#fff;opacity:.85;box-shadow:0 0 0 0 #fff;}
+.cloud{position:absolute;image-rendering:pixelated;}
+.cloud b{display:block;width:48px;height:24px;background:#f3e8ff;position:absolute;}
+.sun{
+  position:absolute;left:1480px;top:120px;width:180px;height:180px;border-radius:50%;
+  background:radial-gradient(circle at 50% 50%,#ffe9b0 0%,#ffd06a 55%,#ff9e57 100%);
+  box-shadow:0 0 90px 20px rgba(255,180,90,.45);
+}
+/* mountains */
+.range{position:absolute;bottom:170px;left:0;width:1920px;height:280px;}
+.peak{position:absolute;bottom:0;width:0;height:0;border-style:solid;}
+/* ---------- ground ---------- */
+#ground{position:absolute;left:0;bottom:0;width:1920px;height:176px;}
+#grass{
+  position:absolute;left:0;top:0;width:1920px;height:64px;
+  background:url("assets/grass_top.png");background-size:64px 64px;background-repeat:repeat-x;
+  image-rendering:pixelated;filter:drop-shadow(0 3px 0 rgba(0,0,0,.25));
+}
+#dirt{
+  position:absolute;left:0;top:60px;width:1920px;height:120px;
+  background:url("assets/dirt.png");background-size:64px 64px;background-repeat:repeat;
+  image-rendering:pixelated;
+}
+/* ---------- timeline track ---------- */
+#track{
+  position:absolute;left:120px;bottom:300px;width:1680px;height:14px;
+  background:repeating-linear-gradient(90deg,#2a1c3d 0 18px,transparent 18px 36px);
+  border-radius:7px;
+}
+#trackfill{
+  position:absolute;left:120px;bottom:300px;width:0;height:14px;border-radius:7px;
+  background:linear-gradient(90deg,#ffd76a,#ff8a5c);
+  box-shadow:0 0 16px rgba(255,170,90,.7);
+}
+/* ---------- nodes ---------- */
+.node{position:absolute;bottom:307px;transform:translateX(-50%);text-align:center;width:240px;}
+.node .post{
+  width:18px;height:96px;margin:0 auto;background:#5a4730;
+  box-shadow:inset -4px 0 0 rgba(0,0,0,.35),inset 4px 0 0 rgba(255,255,255,.12);
+  position:relative;
+}
+.node .flag{
+  position:absolute;left:18px;top:6px;width:0;height:0;
+  border-top:18px solid transparent;border-bottom:18px solid transparent;
+  border-left:34px solid #ff5d6c;
+  transform:scaleX(0);transform-origin:left center;
+  filter:drop-shadow(2px 2px 0 rgba(0,0,0,.3));
+}
+.node .num{
+  font-family:"PressStart";font-size:18px;color:#fff;
+  background:#1c1230;border:4px solid #ffd76a;padding:6px 10px;border-radius:6px;
+  display:inline-block;margin-bottom:8px;box-shadow:0 6px 0 rgba(0,0,0,.35);
+  filter:grayscale(.7) brightness(.7);transition:none;
+}
+.node .label{
+  font-family:"Zpix";font-size:30px;color:#fff;margin-top:14px;line-height:1.1;
+  text-shadow:3px 3px 0 #000;letter-spacing:1px;
+  background:rgba(20,12,36,.55);padding:6px 10px;border-radius:6px;display:inline-block;
+}
+.node.lit .num{filter:none;background:#ff8a3c;color:#1c1230;box-shadow:0 6px 0 #7a3a14,0 0 20px #ffb05c;}
+.node.lit .post{box-shadow:inset -4px 0 0 rgba(0,0,0,.35),inset 4px 0 0 rgba(255,255,255,.2),0 0 18px rgba(255,180,90,.4);}
+/* floating fruit above node */
+.fruit{
+  position:absolute;left:50%;transform:translateX(-50%);top:-92px;
+  width:32px;height:32px;background:url("assets/fruit.png");background-size:544px 32px;
+  animation:fruitspin 1.4s steps(17) infinite, bob 1.8s ease-in-out infinite;
+  image-rendering:pixelated;
+  scale:1.7;filter:drop-shadow(0 6px 0 rgba(0,0,0,.25));
+}
+@keyframes fruitspin{from{background-position-x:0}to{background-position-x:-544px}}
+@keyframes bob{0%,100%{margin-top:0}50%{margin-top:-14px}}
+/* ---------- hero ---------- */
+#hero{
+  position:absolute;bottom:168px;left:60px;width:32px;height:32px;
+  transform:scale(4.4);transform-origin:bottom center;z-index:20;
+  image-rendering:pixelated;
+}
+#hero .spr{width:32px;height:32px;image-rendering:pixelated;}
+.anim-idle{background:url("assets/idle.png");background-size:352px 32px;animation:a-idle .9s steps(11) infinite;}
+.anim-run {background:url("assets/run.png"); background-size:384px 32px;animation:a-run .7s steps(12) infinite;}
+.anim-jump{background:url("assets/jump.png");background-size:32px 32px;background-position:0 0;animation:none;}
+.anim-djump{background:url("assets/djump.png");background-size:192px 32px;animation:a-djump .42s steps(6) infinite;}
+@keyframes a-idle{from{background-position-x:0}to{background-position-x:-352px}}
+@keyframes a-run {from{background-position-x:0}to{background-position-x:-384px}}
+@keyframes a-djump{from{background-position-x:0}to{background-position-x:-192px}}
+.flip{transform:scaleX(-1);}
+/* ---------- pit / hazard ---------- */
+#pit{position:absolute;left:1008px;bottom:0;width:156px;height:176px;z-index:6;
+  background:linear-gradient(180deg,#120b1d 0%,#0a0610 100%);
+  box-shadow:inset 12px 0 0 #4a3722,inset -12px 0 0 #4a3722,inset 0 8px 0 #2a1c12;}
+#pit .spike{position:absolute;bottom:0;width:0;height:0;
+  border-left:13px solid transparent;border-right:13px solid transparent;border-bottom:34px solid #d7d2e0;
+  filter:drop-shadow(2px 0 0 #8e88a0);}
+#warn{position:absolute;left:1086px;bottom:336px;z-index:7;font-family:"Zpix";font-size:30px;color:#ffd23f;
+  text-shadow:3px 3px 0 #000;animation:warnblink .6s steps(2) infinite;text-align:center;}
+@keyframes warnblink{0%{opacity:1}50%{opacity:.35}100%{opacity:1}}
+/* dust */
+.dust{position:absolute;width:10px;height:10px;background:#e7d8b5;border-radius:2px;z-index:18;opacity:.9;}
+/* confetti */
+.confetti{position:absolute;width:14px;height:14px;z-index:60;}
+/* ---------- speech bubble ---------- */
+#bubble{
+  position:absolute;z-index:40;max-width:520px;
+  font-family:"Zpix";font-size:34px;color:#1c1230;line-height:1.25;
+  background:#fffdf5;padding:18px 22px;border-radius:10px;
+  box-shadow:0 0 0 6px #1c1230, 10px 12px 0 rgba(0,0,0,.3);
+  opacity:0;transform:translateY(20px) scale(.6);transform-origin:bottom left;
+}
+#bubble::after{
+  content:"";position:absolute;left:40px;bottom:-22px;
+  border-left:0 solid transparent;border-right:26px solid transparent;
+  border-top:24px solid #fffdf5;
+  filter:drop-shadow(0 7px 0 #1c1230);
+}
+/* ---------- HUD ---------- */
+#hud{position:absolute;left:48px;top:40px;z-index:50;}
+#hud .title{
+  font-family:"PressStart";font-size:34px;color:#ffd76a;text-shadow:5px 5px 0 #000,0 0 18px rgba(255,180,90,.5);
+}
+#hud .lvl{font-family:"PressStart";font-size:18px;color:#fff;text-shadow:3px 3px 0 #000;margin-top:14px;}
+#score{
+  position:absolute;right:56px;top:46px;z-index:50;font-family:"PressStart";font-size:26px;color:#fff;
+  text-shadow:4px 4px 0 #000;display:flex;align-items:center;gap:14px;
+}
+#score .ic{width:30px;height:30px;background:url("assets/fruit.png");background-size:510px 30px;image-rendering:pixelated;}
+/* center banners */
+.banner{
+  position:absolute;left:50%;top:42%;transform:translate(-50%,-50%) scale(.4);
+  font-family:"PressStart";color:#fff;text-align:center;z-index:70;opacity:0;
+  text-shadow:6px 6px 0 #000,0 0 30px rgba(255,200,90,.7);pointer-events:none;
+}
+#go{font-size:130px;color:#7CFFB2;}
+#clear{font-size:96px;color:#ffd76a;}
+#clear small{display:block;font-size:30px;color:#fff;margin-top:24px;}
+/* ---------- CRT polish overlays ---------- */
+#scan{position:absolute;inset:0;z-index:90;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 2px,transparent 2px 4px);
+  mix-blend-mode:multiply;opacity:.55;}
+#vig{position:absolute;inset:0;z-index:91;pointer-events:none;
+  background:radial-gradient(ellipse at center,transparent 52%,rgba(0,0,0,.55) 100%);}
+#grain{position:absolute;inset:-50%;z-index:92;pointer-events:none;opacity:.06;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  animation:grainmove .6s steps(4) infinite;}
+@keyframes grainmove{0%{transform:translate(0,0)}25%{transform:translate(-3%,2%)}50%{transform:translate(2%,-2%)}75%{transform:translate(-2%,-3%)}100%{transform:translate(3%,2%)}}
+/* replay */
+#replay{
+  position:absolute;right:48px;bottom:40px;z-index:95;cursor:pointer;
+  font-family:"PressStart";font-size:18px;color:#1c1230;background:#ffd76a;
+  padding:14px 20px;border-radius:8px;border:none;box-shadow:0 7px 0 #a8791f;
+  opacity:0;transition:opacity .3s;
+}
+#replay:active{transform:translateY(4px);box-shadow:0 3px 0 #a8791f;}
+</style>
+</head>
+<body>
+<div id="fit">
+  <div id="stage">
+    <div class="sun"></div>
+    <div class="range" id="range"></div>
+
+    <div id="track"></div>
+    <div id="trackfill"></div>
+
+    <div id="nodes"></div>
+
+    <div id="ground">
+      <div id="dirt"></div>
+      <div id="grass"></div>
+    </div>
+    <div id="pit">
+      <i class="spike" style="left:24px"></i>
+      <i class="spike" style="left:64px"></i>
+      <i class="spike" style="left:104px"></i>
+    </div>
+    <div id="warn">⚠<br>坑</div>
+
+    <div id="hero"><div class="spr anim-idle"></div></div>
+    <div id="bubble"></div>
+
+    <div id="hud"><div class="title">SKILL 大冒险</div><div class="lvl">LEVEL 1-1　▶ 一条视频通关</div></div>
+    <div id="score"><div class="ic"></div><span id="scoreval">00 / 05</span></div>
+
+    <div id="go" class="banner">GO!</div>
+    <div id="clear" class="banner">LEVEL CLEAR!<small>5 个知识点全部收集 ★★★</small></div>
+
+    <button id="replay">↻ REPLAY</button>
+
+    <div id="scan"></div>
+    <div id="vig"></div>
+    <div id="grain"></div>
+  </div>
+</div>
+
+<script src="assets/gsap.min.js"></script>
+<script>
+const stage = document.getElementById('stage');
+function fit(){
+  const s = Math.min(window.innerWidth/1920, window.innerHeight/1080);
+  stage.style.transform = `scale(${s})`;
+}
+window.addEventListener('resize', fit); fit();
+
+// ---- decor: stars + mountains ----
+(function decor(){
+  const stg = stage;
+  for(let i=0;i<46;i++){
+    const s=document.createElement('div'); s.className='star';
+    s.style.left=(Math.random()*1920)+'px';
+    s.style.top=(Math.random()*520)+'px';
+    s.style.opacity=(.3+Math.random()*.6);
+    s.style.transform=`scale(${Math.random()<.3?2:1})`;
+    stg.insertBefore(s, stg.firstChild);
+    gsap.to(s,{opacity:.15,duration:1+Math.random()*2,yoyo:true,repeat:-1,delay:Math.random()*2});
+  }
+  const range=document.getElementById('range');
+  const cols=['#3a2950','#2e2042','#46315e'];
+  for(let i=0;i<7;i++){
+    const w=180+Math.random()*220, h=120+Math.random()*150;
+    const p=document.createElement('div'); p.className='peak';
+    p.style.left=(i*260-60)+'px';
+    p.style.borderLeft=(w/2)+'px solid transparent';
+    p.style.borderRight=(w/2)+'px solid transparent';
+    p.style.borderBottom=h+'px solid '+cols[i%3];
+    range.appendChild(p);
+  }
+})();
+
+// ---- nodes ----
+const NODES = [
+  {x:300,  num:'1', label:'是什么',     line:'嗨呀～不就一个文件夹嘛！'},
+  {x:620,  num:'2', label:'区别',       line:'和提示词差在…加载方式！'},
+  {x:940,  num:'3', label:'创建',       line:'对话里一句话，AI 帮我生成！'},
+  {x:1260, num:'4', label:'安装',       line:'链接丢给它，自己装好～'},
+  {x:1600, num:'5', label:'写好·邪修',  line:'一个技能只干一件事 ✓'},
+];
+const nodesEl = document.getElementById('nodes');
+NODES.forEach((n,i)=>{
+  const d=document.createElement('div'); d.className='node'; d.id='node'+i;
+  d.style.left=n.x+'px';
+  d.innerHTML=`<div class="num">${n.num}</div>
+    <div class="post"><div class="flag"></div><div class="fruit"></div></div>
+    <div class="label">${n.label}</div>`;
+  nodesEl.appendChild(d);
+});
+
+const hero=document.getElementById('hero');
+const spr=hero.querySelector('.spr');
+const bubble=document.getElementById('bubble');
+const trackfill=document.getElementById('trackfill');
+const scoreval=document.getElementById('scoreval');
+const replay=document.getElementById('replay');
+
+function setAnim(name){ spr.className='spr anim-'+name; }
+function heroFootX(){ return hero.offsetLeft; }
+
+function dust(){
+  for(let i=0;i<7;i++){
+    const d=document.createElement('div'); d.className='dust';
+    d.style.left=(hero.offsetLeft-10)+'px'; d.style.bottom='168px';
+    stage.appendChild(d);
+    gsap.to(d,{x:(-60-Math.random()*70),y:(-30-Math.random()*50),opacity:0,
+      duration:.5+Math.random()*.3,ease:'power2.out',onComplete:()=>d.remove()});
+  }
+}
+function shake(){ gsap.fromTo(stage,{x:0,y:0},{x:0,y:0,duration:.32,ease:'elastic.out(1,0.3)',
+    startAt:{y:-10},keyframes:{y:[10,-6,4,0]}}); }
+
+function popBubble(x,text){
+  bubble.textContent=text;
+  bubble.style.left=Math.min(x,1380)+'px';
+  bubble.style.bottom='560px';
+  gsap.killTweensOf(bubble);
+  gsap.fromTo(bubble,{opacity:0,y:20,scale:.6},{opacity:1,y:0,scale:1,duration:.32,ease:'back.out(2.2)'});
+}
+function hideBubble(){ gsap.to(bubble,{opacity:0,y:20,scale:.7,duration:.2}); }
+
+let score=0;
+function collect(i){
+  const node=document.getElementById('node'+i);
+  node.classList.add('lit');
+  gsap.fromTo(node.querySelector('.flag'),{scaleX:0},{scaleX:1,duration:.35,ease:'back.out(3)'});
+  gsap.fromTo(node.querySelector('.num'),{scale:1},{scale:1.35,yoyo:true,repeat:1,duration:.18});
+  // fruit flies to HUD
+  const fruit=node.querySelector('.fruit');
+  const r=fruit.getBoundingClientRect(), sr=stage.getBoundingClientRect();
+  const sc=sr.width/1920;
+  const fx=(r.left-sr.left)/sc, fy=(r.top-sr.top)/sc;
+  const fly=document.createElement('div'); fly.className='fruit';
+  fly.style.left=fx+'px'; fly.style.top=fy+'px'; fly.style.transform='translateX(0)'; fly.style.position='absolute';
+  stage.appendChild(fly); fruit.style.visibility='hidden';
+  gsap.to(fly,{left:1640,top:46,scale:.9,duration:.6,ease:'power2.in',onComplete:()=>{
+    fly.remove(); score++; scoreval.textContent=String(score).padStart(2,'0')+' / 05';
+    gsap.fromTo(scoreval,{scale:1.6},{scale:1,duration:.3,ease:'back.out(3)'});
+  }});
+  // progress fill
+  gsap.to(trackfill,{width:(NODES[i].x-120)+'px',duration:.5,ease:'power1.out'});
+}
+
+function confetti(){
+  const cols=['#ff5d6c','#ffd76a','#7CFFB2','#5cb8ff','#ff9e57','#c98bff'];
+  for(let i=0;i<90;i++){
+    const c=document.createElement('div'); c.className='confetti';
+    c.style.background=cols[i%cols.length];
+    c.style.left=(760+Math.random()*400)+'px'; c.style.top='-40px';
+    stage.appendChild(c);
+    gsap.to(c,{y:1100+Math.random()*200,x:(Math.random()*600-300),rotation:Math.random()*720,
+      duration:1.6+Math.random()*1.4,ease:'power1.in',delay:Math.random()*.5,onComplete:()=>c.remove()});
+  }
+}
+
+// ---------- main timeline ----------
+let tl;
+function play(){
+  // reset
+  score=0; scoreval.textContent='00 / 05';
+  trackfill.style.width='0px';
+  NODES.forEach((n,i)=>{ const nd=document.getElementById('node'+i);
+    nd.classList.remove('lit'); nd.querySelector('.flag').style.transform='scaleX(0)';
+    nd.querySelector('.fruit').style.visibility='visible'; });
+  gsap.set(hero,{left:60, bottom:168}); setAnim('idle');
+  gsap.set('#go',{opacity:0,scale:.4}); gsap.set('#clear',{opacity:0,scale:.4});
+  hideBubble(); replay.style.opacity=0;
+
+  tl=gsap.timeline();
+  // intro GO!
+  tl.to('#go',{opacity:1,scale:1,duration:.3,ease:'back.out(2)'},'+=.3')
+    .to('#go',{opacity:0,scale:1.6,duration:.3,ease:'power2.in'},'+=.5');
+
+  NODES.forEach((n,i)=>{
+    const stopX = n.x-58; // align hero just before the post
+    tl.add(()=>{ setAnim('run'); hideBubble(); }, '+=.05');
+
+    // ----- pit + double jump between node3 (创建) and node4 (安装) -----
+    if(i===3){
+      tl.to(hero,{left:946, duration:.6, ease:'none'});          // skid to the edge
+      tl.add(()=>{ setAnim('idle'); popBubble(1000,'前面有坑——双跳！😱'); });
+      tl.to({},{duration:.65});
+      const J='jump';
+      tl.add(()=>{ hideBubble(); setAnim('jump'); }, J);
+      tl.add(()=>setAnim('djump'), J+'+=0.14');                   // spin mid-air
+      tl.to(hero,{left:1208, duration:.86, ease:'none'}, J);      // horizontal arc
+      tl.to(hero,{bottom:168+250, duration:.4, ease:'power2.out'}, J);
+      tl.to(hero,{bottom:168, duration:.46, ease:'power2.in'},  J+'+=0.4');
+      tl.add(()=>{ setAnim('idle'); dust(); shake(); popBubble(1180,'稳！👍'); }, J+'+=0.86');
+      tl.to({},{duration:.55});
+      tl.add(()=>{ hideBubble(); setAnim('run'); });
+    }
+
+    tl.to(hero,{left:stopX, duration:(i===0?1.0 : i===3?0.35 : 0.95), ease:'none'});
+    tl.add(()=>{ setAnim('idle'); dust(); shake(); collect(i); popBubble(n.x-30,n.line); });
+    tl.to({},{duration:1.35}); // dwell to read
+  });
+
+  // run off a touch then CLEAR
+  tl.add(()=>{ setAnim('run'); hideBubble(); });
+  tl.to(hero,{left:1740,duration:.7,ease:'none'});
+  tl.add(()=>{ setAnim('idle'); shake(); confetti(); });
+  tl.to('#clear',{opacity:1,scale:1,duration:.5,ease:'back.out(1.8)'},'+=.1');
+  tl.add(()=>{ replay.style.opacity=1; });
+}
+replay.addEventListener('click',()=>{ if(tl) tl.kill(); play(); });
+
+// kick off after fonts settle
+if(document.fonts && document.fonts.ready){ document.fonts.ready.then(()=>setTimeout(play,250)); }
+else { window.addEventListener('load',()=>setTimeout(play,400)); }
+</script>
+</body>
+</html>

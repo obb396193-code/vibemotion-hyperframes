@@ -1,0 +1,57 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"/><meta name="viewport" content="width=1920,height=1080"/>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@hyperframes/core/dist/hyperframe.runtime.iife.js"></script>
+<link rel="stylesheet" href="../../assets/purple/kit.css"/>
+<script src="../../assets/purple/kit.js"></script>
+<style>
+@font-face{font-family:"AliPuHui";src:url("../../assets/purple/fonts/AliPuHui.woff2") format("woff2");font-display:swap;}
+@font-face{font-family:"Mono";font-weight:500;src:url("../../assets/purple/fonts/IBMPlexMono-500.woff2") format("woff2");font-display:swap;}
+.ic{display:block;}.ic svg{width:100%;height:100%;}
+#s1-kick{position:absolute;left:50%;top:150px;transform:translateX(-50%);font-family:"Mono";font-size:30px;color:var(--vio);letter-spacing:.4em;}
+#s1-title{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);}#s1-title .chrome{font-size:200px;}
+#s1-sub{position:absolute;left:50%;top:60%;transform:translateX(-50%);font-family:"AliPuHui";font-size:54px;color:var(--muted);white-space:nowrap;}
+#cards{position:absolute;left:0;right:0;top:660px;display:flex;justify-content:center;gap:44px;}
+.spec{width:430px;height:320px;border-radius:30px;padding:46px 40px;display:flex;flex-direction:column;gap:18px;}
+.spec .ic{width:78px;height:78px;color:#c9b5ff;filter:drop-shadow(0 0 16px rgba(180,113,255,.5));}
+.spec .ic svg{stroke-width:1.5;}
+.spec .v{font-family:"AliPuHui";font-size:74px;color:#fff;line-height:1;}
+.spec .v small{font-size:34px;color:var(--muted);}
+.spec .l{font-family:"AliPuHui";font-size:36px;color:#c9c4e8;}
+</style></head><body>
+<div id="root" data-composition-id="main" data-width="1920" data-height="1080" data-start="0" data-duration="8">
+  <div class="scene clip prem" id="s1" data-start="0" data-duration="8" data-track-index="0">
+    <div class="k-content">
+      <div id="s1-kick">NEW · 2026 旗舰</div>
+      <div id="s1-title"><div class="chrome" data-text="灵眸 Pro"></div></div>
+      <div id="s1-sub">重新定义 <span style="color:var(--vio)">看见</span></div>
+      <div id="cards">
+        <div class="glass spec" id="c0"><div class="ic" data-i="cam"></div><div class="v">2<small>亿</small></div><div class="l">像素影像</div></div>
+        <div class="glass spec" id="c1"><div class="ic" data-i="bat"></div><div class="v">7000<small>mAh</small></div><div class="l">全天续航</div></div>
+        <div class="glass spec" id="c2"><div class="ic" data-i="cpu"></div><div class="v">灵犀</div><div class="l">AI 影像芯片</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+var IC={cam:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/></svg>',
+bat:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="10" x="2" y="7" rx="2"/><line x1="22" x2="22" y1="11" y2="13"/><line x1="6" x2="6" y1="11" y2="13"/><line x1="10" x2="10" y1="11" y2="13"/><line x1="14" x2="14" y1="11" y2="13"/></svg>',
+cpu:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2M15 20v2M2 15h2M2 9h2M20 15h2M20 9h2M9 2v2M9 20v2"/></svg>'};
+document.querySelectorAll('.ic[data-i]').forEach(function(e){e.innerHTML=IC[e.getAttribute('data-i')];});
+[document.getElementById('s1')].forEach(function(sc){PremKit.mountBG(sc);});
+PremKit.chromeAll();
+window.__timelines=window.__timelines||{};var tl=gsap.timeline({paused:true});
+var GLOW="0 0 56px rgba(154,108,255,.55),0 40px 90px rgba(10,4,32,.55),inset 0 1px 0 rgba(255,255,255,.45)";
+var GLASS="0 40px 90px rgba(10,4,32,.55),inset 0 1px 0 rgba(255,255,255,.35),inset 0 0 60px rgba(154,108,255,.06)";
+PremKit.bgDrift(tl,4.4);
+PremKit.F(tl,'#s1-kick',{autoAlpha:0,y:-16},{autoAlpha:1,y:0,duration:.5,ease:'power2.out'},0.2);
+PremKit.chromeIn(tl,'#s1-title .chrome',0.4);
+PremKit.F(tl,'#s1-sub',{autoAlpha:0,y:24},{autoAlpha:1,y:0,duration:.6,ease:'power3.out'},1.6);
+["#c0","#c1","#c2"].forEach(function(s,i){
+  PremKit.F(tl,s,{autoAlpha:0,y:60,scale:.95},{autoAlpha:1,y:0,scale:1,duration:.6,ease:'back.out(1.5)'},2.2+i*0.2);
+  tl.fromTo(s+" .ic",{scale:0,rotation:-30},{scale:1,rotation:0,duration:.45,ease:'back.out(2.4)'},2.5+i*0.2);
+  tl.fromTo(s,{boxShadow:GLASS,borderColor:'rgba(190,170,255,.30)'},{boxShadow:GLOW,borderColor:'rgba(190,170,255,.7)',duration:.6,ease:'sine.out'},3.4+i*0.2);
+});
+tl.to("#cards .spec",{boxShadow:GLASS,borderColor:'rgba(190,170,255,.3)',duration:1.0,yoyo:true,repeat:1,ease:'sine.inOut',stagger:.1},5.4);
+tl.to({},{duration:.6},7.8);
+window.__timelines["main"]=tl;
+</script></body></html>

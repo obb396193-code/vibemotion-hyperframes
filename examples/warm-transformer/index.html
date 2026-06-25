@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>Transformer 注意力 · 60s</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;500;700&family=DM+Serif+Display&family=IBM+Plex+Mono:wght@300;500&family=Noto+Sans+SC:wght@300;500;900&family=Noto+Serif+SC:wght@300;700;900&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      /* Claude Design palette — warm */
+      --bg-dark:    #1A1410;
+      --bg-cream:   #F5EFE6;
+      --bg-cream-2: #EBE3D5;
+      --ink:        #2C2620;
+      --ink-soft:   #5C5249;
+      --ink-cream:  #F5EFE6;
+      --accent:     #CC785C;
+      --accent-2:   #E8A07A;
+      --accent-dim: #8B4A36;
+      --muted:      #8B7E72;
+      --muted-line: #C9BFB1;
+      --glow:       rgba(204,120,92,0.45);
+
+      /* Typography */
+      --font-display: "Noto Serif SC", "DM Serif Display", serif;
+      --font-sans:    "Noto Sans SC", "DM Sans", -apple-system, system-ui, sans-serif;
+      --font-mono:    "IBM Plex Mono", "SF Mono", Menlo, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: #000; overflow: hidden; font-family: var(--font-sans); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    /* ─── Root composition (native 1080×1920) ─── */
+    #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; flex-shrink: 0; transform-origin: center center; }
+
+    /* ─── Scene base ─── */
+    .scene {
+      position: absolute; inset: 0;
+      width: 1080px; height: 1920px;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    .scene-content {
+      position: relative;
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column;
+    }
+
+    /* ─── Backgrounds ─── */
+    .bg-dark   { background: radial-gradient(ellipse at 50% 40%, #2A1F18 0%, var(--bg-dark) 70%); }
+    .bg-cream  { background: radial-gradient(ellipse at 50% 30%, var(--bg-cream) 0%, var(--bg-cream-2) 100%); }
+
+    /* ─── Decorative: grain overlay (CSS, NOT svg-filter — per HF rules) ─── */
+    .grain {
+      position: absolute; inset: 0; pointer-events: none; z-index: 50; opacity: 0.18;
+      background-image:
+        radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1.2px),
+        radial-gradient(rgba(0,0,0,0.20) 1px, transparent 1.2px);
+      background-size: 3px 3px, 5px 5px;
+      background-position: 0 0, 1px 2px;
+      mix-blend-mode: overlay;
+    }
+    .vignette {
+      position: absolute; inset: 0; pointer-events: none; z-index: 40;
+      background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.45) 100%);
+    }
+    .glow-orb {
+      position: absolute; border-radius: 50%; pointer-events: none;
+      filter: blur(60px); opacity: 0.5;
+    }
+
+    /* ─── Typography classes ─── */
+    .display-xl  { font-family: var(--font-display); font-weight: 900; font-size: 140px; line-height: 1.05; letter-spacing: -0.02em; color: var(--ink-cream); }
+    .display-lg  { font-family: var(--font-display); font-weight: 900; font-size: 110px; line-height: 1.08; letter-spacing: -0.01em; color: var(--ink); }
+    .display-md  { font-family: var(--font-display); font-weight: 700; font-size: 84px;  line-height: 1.15; color: var(--ink); }
+    .display-thin{ font-family: var(--font-display); font-weight: 300; font-size: 92px;  line-height: 1.2;  color: var(--ink-cream); letter-spacing: 0.01em; }
+    .sub         { font-family: var(--font-sans); font-weight: 300; font-size: 42px; line-height: 1.4; color: var(--ink-soft); letter-spacing: 0.02em; }
+    .sub-cream   { font-family: var(--font-sans); font-weight: 300; font-size: 42px; line-height: 1.4; color: rgba(245,239,230,0.7); letter-spacing: 0.02em; }
+    .label       { font-family: var(--font-mono); font-weight: 500; font-size: 28px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+    .label-dim   { font-family: var(--font-mono); font-weight: 300; font-size: 26px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+    .tag         { font-family: var(--font-mono); font-weight: 500; font-size: 32px; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+    /* ─── Reusable: token chip (the word boxes) ─── */
+    .token {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 18px 24px;
+      font-family: var(--font-display); font-weight: 700; font-size: 48px;
+      color: var(--ink-cream);
+      background: rgba(245,239,230,0.04);
+      border: 1.5px solid rgba(245,239,230,0.25);
+      border-radius: 12px;
+      backdrop-filter: blur(6px);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .token.dark { color: var(--ink); background: rgba(44,38,32,0.04); border-color: rgba(44,38,32,0.18); }
+    .token.hot  { color: var(--accent); border-color: var(--accent); background: rgba(204,120,92,0.08); box-shadow: 0 0 50px var(--glow); }
+
+    /* ─── S1 specific ─── */
+    .s1-stack { gap: 30px; }
+    .s1-hook { text-align: center; max-width: 900px; }
+    .s1-eyebrow { margin-bottom: 60px; }
+    .s1-orb { width: 600px; height: 600px; top: -200px; right: -200px; background: var(--accent); }
+    .s1-orb-2 { width: 500px; height: 500px; bottom: -150px; left: -180px; background: var(--accent-dim); }
+
+    /* ─── S2 specific ─── */
+    .s2-stack { gap: 80px; align-items: center; }
+    .s2-sentence { display: flex; flex-wrap: nowrap; gap: 12px; justify-content: center; align-items: center; max-width: 1040px; padding: 0 20px; }
+    .s2-q { font-family: var(--font-display); font-weight: 300; font-size: 72px; color: var(--ink-soft); font-style: italic; }
+    .s2-q strong { color: var(--accent); font-weight: 900; font-style: normal; }
+
+    /* ─── S3 specific ─── */
+    .s3-stack { gap: 100px; align-items: center; }
+    .s3-row { display: flex; gap: 14px; align-items: center; justify-content: center; max-width: 1040px; padding: 0 20px; }
+    .s3-arrow { width: 50px; height: 3px; background: var(--muted); position: relative; flex-shrink: 0; }
+    .s3-arrow::after { content: ""; position: absolute; right: -2px; top: -6px; width: 0; height: 0; border-left: 12px solid var(--muted); border-top: 8px solid transparent; border-bottom: 8px solid transparent; }
+    .s3-note { font-family: var(--font-display); font-style: italic; font-weight: 300; font-size: 56px; color: var(--ink-soft); }
+    .s3-note em { color: var(--accent-dim); font-style: normal; font-weight: 700; }
+
+    /* ─── S4 / S5 / S6 — attention visualization ─── */
+    .att-stage { position: relative; width: 1000px; height: 1000px; }
+    .att-svg   { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    .att-token {
+      position: absolute; transform: translate(-50%, -50%);
+      padding: 18px 28px; border-radius: 12px;
+      font-family: var(--font-display); font-weight: 700; font-size: 52px;
+      color: var(--ink-cream); background: rgba(26,20,16,0.85);
+      border: 1.5px solid rgba(245,239,230,0.3);
+      backdrop-filter: blur(8px); white-space: nowrap;
+    }
+    .att-token.focus { color: var(--accent); border-color: var(--accent); box-shadow: 0 0 40px var(--glow); }
+
+    .pct-label {
+      position: absolute; transform: translate(-50%, -50%);
+      font-family: var(--font-mono); font-weight: 500; font-size: 36px;
+      color: var(--accent-2); font-variant-numeric: tabular-nums;
+      background: rgba(26,20,16,0.7); padding: 6px 14px; border-radius: 6px;
+      border: 1px solid var(--accent-dim);
+    }
+
+    /* ─── S7 specific ─── */
+    .s7-bg-words { position: absolute; inset: 0; overflow: hidden; opacity: 0.25; }
+    .s7-bg-word {
+      position: absolute; font-family: var(--font-display); font-weight: 300;
+      color: var(--ink-soft); font-size: 64px; white-space: nowrap;
+    }
+    .s7-main { text-align: center; z-index: 5; position: relative; max-width: 900px; }
+    .s7-line1 { font-family: var(--font-display); font-weight: 300; font-size: 96px; color: var(--ink-soft); margin-bottom: 30px; }
+    .s7-line2 { font-family: var(--font-display); font-weight: 900; font-size: 130px; color: var(--ink); line-height: 1.05; }
+    .s7-line2 .h { color: var(--accent); }
+
+    /* ─── S8 specific ─── */
+    .s8-row { display: flex; gap: 0; align-items: center; justify-content: center; width: 100%; max-width: 1040px; }
+    .s8-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 30px; padding: 0 10px; }
+    .s8-divider { width: 2px; height: 240px; background: var(--muted-line); flex-shrink: 0; }
+    .s8-label   { font-family: var(--font-mono); font-weight: 300; font-size: 30px; letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase; }
+    .s8-big     { font-family: var(--font-display); font-weight: 900; font-size: 150px; line-height: 1; letter-spacing: -0.02em; }
+    .s8-big.cold { color: var(--muted); }
+    .s8-big.hot  { color: var(--accent); text-shadow: 0 0 40px var(--glow); }
+
+    /* ─── S9 specific ─── */
+    .s9-slogan {
+      text-align: center; max-width: 940px;
+      font-family: var(--font-display); font-weight: 300; font-size: 78px;
+      line-height: 1.4; color: var(--ink-cream); letter-spacing: 0.01em;
+    }
+    .s9-slogan em { color: var(--accent); font-style: normal; font-weight: 900; }
+    .s9-handle { position: absolute; bottom: 100px; left: 0; right: 0; text-align: center; }
+    .s9-handle-name { font-family: var(--font-display); font-weight: 700; font-size: 44px; color: var(--ink-cream); }
+    .s9-handle-tag { font-family: var(--font-mono); font-weight: 300; font-size: 26px; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; margin-top: 14px; }
+
+    /* Character split helper */
+    .char { display: inline-block; }
+    .word-row { display: flex; gap: 14px; flex-wrap: nowrap; justify-content: center; }
+  </style>
+</head>
+
+<body>
+
+<div id="root" data-composition-id="main"
+     data-width="1080" data-height="1920"
+     data-start="0" data-duration="60">
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       S1 · 0-5s · 钩子 · anchor (opacity:0)
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="scene clip bg-dark" id="s1"
+       data-start="0" data-duration="5" data-track-index="0"
+       style="opacity:0;">
+    <div class="glow-orb s1-orb"  id="s1-orb-a"></div>
+    <div class="glow-orb s1-orb-2" id="s1-orb-b"></div>
+    <div class="grain"></div>
+    <div class="vignette"></div>
+
+    <div class="scene-content s1-stack">
+      <div class="label s1-eyebrow" id="s1-eyebrow">— A I  科 普  N o . 0 1 —</div>
+      <div class="s1-hook">
+        <div class="display-xl" id="s1-line1">
+          <span class="char">你</span><span class="char">以</span><span class="char">为</span>
+          <span class="char">&nbsp;</span>
+          <span class="char">C</span><span class="char">h</span><span class="char">a</span><span class="char">t</span><span class="char">G</span><span class="char">P</span><span class="char">T</span>
+        </div>
+        <div class="display-thin" id="s1-line2" style="font-style:italic; margin-top:30px;">
+          在 「读」 你 的 话？
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       S2 · 5-12s · 例句 · anchor (opacity:0)
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="scene clip bg-cream" id="s2"
+       data-start="5" data-duration="7" data-track-index="0"
+       style="opacity:0;">
+    <div class="grain"></div>
+
+    <div class="scene-content s2-stack">
+      <div class="label-dim" id="s2-eyebrow">看 这 一 句 话</div>
+
+      <div class="s2-sentence" id="s2-sentence">
+        <span class="token dark" id="s2-t1">猫</span>
+        <span class="token dark" id="s2-t2">坐</span>
+        <span class="token dark" id="s2-t3">垫子</span>
+        <span class="token dark" id="s2-t4">上</span>
+        <span class="token dark" id="s2-t5">因为</span>
+        <span class="token dark hot" id="s2-t6">它</span>
+        <span class="token dark" id="s2-t7">累了</span>
+      </div>
+
+      <div class="s2-q" id="s2-q">
+        <strong>「它」</strong> 指 的 是 谁 ？
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       S3 · 12-19s · 旧 AI 方法 · non-anchor (visibility:hidden)
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="scene clip bg-cream" id="s3"
+       data-start="12" data-duration="7" data-track-index="0"
+       style="visibility:hidden;">
+    <div class="grain"></div>
+
+    <div class="scene-content s3-stack">
+      <div class="label-dim" id="s3-eyebrow">旧 模 型 · R N N</div>
+
+      <div class="s3-row" id="s3-row">
+        <span class="token dark" id="s3-w1">猫</span>
+        <div class="s3-arrow" id="s3-a1"></div>
+        <span class="token dark" id="s3-w2">坐</span>
+        <div class="s3-arrow" id="s3-a2"></div>
+        <span class="token dark" id="s3-w3">垫子</span>
+        <div class="s3-arrow" id="s3-a3"></div>
+        <span class="token dark" id="s3-w4">…</span>
+        <div class="s3-arrow" id="s3-a4"></div>
+        <span class="token dark hot" id="s3-w5">它</span>
+      </div>
+
+      <div class="s3-note" id="s3-note">
+        读 到 结 尾 ， <em>忘 了 开 头</em>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       S4 · 19-28s · Transformer 的转折 · non-anchor
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="scene clip bg-dark" id="s4"
+       data-start="19" data-duration="9" data-track-index="0"
+       style="visibility:hidden;">
+    <div class="glow-orb" id="s4-orb" style="width:700px;height:700px;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--accent-dim);opacity:0.35;"></div>
+    <div class="grain"></div>
+    <div class="vignette"></div>
+
+    <div class="scene-content" style="gap:80px;">
+      <div class="label" id="s4-eyebrow">T r a n s f o r m e r</div>
+
+      <div class="att-stage" id="s4-stage">
+        <!-- circular layout, 6 tokens around -->
+        <svg class="att-svg" id="s4-svg" viewBox="0 0 1000 1000">
+          <!-- 15 edges connecting all 6 nodes -->
+          <g id="s4-edges" stroke="var(--accent)" stroke-width="1.5" fill="none" opacity="0.7" stroke-linecap="round"></g>
+        </svg>
+        <!-- tokens — placed via JS-friendly inline styles, positions in CSS coords (1000x1000) -->
+        <div class="att-token" id="s4-n1" style="left:50%; top:8%;">猫</div>
+        <div class="att-token" id="s4-n2" style="left:88%; top:30%;">坐</div>
+        <div class="att-token" id="s4-n3" style="left:88%; top:70%;">垫子</div>
+        <div class="att-token" id="s4-n4" style="left:50%; top:92%;">因为</div>
+        <div class="att-token" id="s4-n5" style="left:12%; top:70%;">它</div>
+        <div class="att-token" id="s4-n6" style="left:12%; top:30%;">累了</div>
+      </div>
+
+      <div class="sub-cream" id="s4-cap" style="text-align:center; max-width:880px;">
+        每 个 词 ， 同 时 看 见 所 有 词
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       S5 · 28-37s · 它 → 注意力权重 · non-anchor
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="scene clip bg-dark" id="s5"
+       data-start="28" data-duration="9" data-track-index="0"
+       style="visibility:hidden;">
+    <div class="grain"></div>
+    <div class="vignette"></div>
+
+    <div class="scene-content" style="gap:50px;">
+      <div class="label" id="s5-eyebrow">A T T E N T I O N · 注 意 力</div>
+
+      <div class="att-stage" id="s5-stage" style="height:1100px;">
+        <svg class="att-svg" id="s5-svg" viewBox="0 0 1000 1100">
+          <!-- 4 edges from center "它" to surrounding words -->
+          <g id="s5-edges" fill="none" stroke-linecap="round"></g>
+        </svg>
+
+        <!-- center: 它 -->
+        <div class="att-token focus" id="s5-center" style="left:50%; top:50%; font-size:72px; padding:24px 40px;">它</div>
+
+        <!-- surrounding 4 -->
+        <div class="att-token" id="s5-a" style="left:50%; top:10%;">猫</div>
+        <div class="att-token" id="s5-b" style="left:88%; top:60%;">垫子</div>
+        <div class="att-token" id="s5-c" style="left:50%; top:90%;">累了</div>
+        <div class="att-token" id="s5-d" style="left:12%; top:60%;">坐</div>
+
+        <!-- percentage labels -->
+        <div class="pct-label" id="s5-p-a" style="left:50%; top:30%;">0%</div>
+        <div class="pct-label" id="s5-p-b" style="left:73%; top:58%;">0%</div>
+        <div class="pct-label" id="s5-p-c" style="left:50%; top:73%;">0%</div>
+        <div class="pct-label" id="s5-p-d" style="left:27%; top:58%;">0%</div>
+      </div>
+
+      <div class="sub-cream" id="s5-cap" style="text-align:center;">
+        「它」 最 关 心 的 ， 是 <span style="color:var(--accent); font-weight:500;">猫</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       S6 · 37-45s · 多头注意力 · anchor (opacity:0)
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="scene clip bg-dark" id="s6"
+       data-start="37" data-duration="8" data-track-index="0"
+       style="opacity:0;">
+    <div class="grain"></div>
+    <div class="vignette"></div>
+
+    <div class="scene-content" style="gap:60px;">
+      <div class="label" id="s6-eyebrow">M U L T I - H E A D · 多 头</div>
+
+      <div class="display-thin" id="s6-line" style="text-align:center; max-width:900px;">
+        而 且 ， <span style="color:var(--accent); font-weight:900; font-style:normal;">不 止 一 双 眼 睛</span>
+      </div>
+
+      <!-- 4 head layers stacked -->
+      <div class="att-stage" id="s6-stage" style="height:900px;">
+        <svg class="att-svg" id="s6-svg" viewBox="0 0 1000 900">
+          <g id="s6-h1" stroke="#CC785C" stroke-width="2" fill="none" opacity="0" stroke-linecap="round"></g>
+          <g id="s6-h2" stroke="#E8A07A" stroke-width="2" fill="none" opacity="0" stroke-linecap="round"></g>
+          <g id="s6-h3" stroke="#8B7E72" stroke-width="2" fill="none" opacity="0" stroke-linecap="round"></g>
+          <g id="s6-h4" stroke="#F5EFE6" stroke-width="2" fill="none" opacity="0" stroke-linecap="round"></g>
+        </svg>
+
+        <!-- same 6 tokens, slightly smaller -->
+        <div class="att-token" id="s6-t1" style="left:50%; top:12%; font-size:42px;">猫</div>
+        <div class="att-token" id="s6-t2" style="left:85%; top:35%; font-size:42px;">坐</div>
+        <div class="att-token" id="s6-t3" style="left:85%; top:68%; font-size:42px;">垫子</div>
+        <div class="att-token" id="s6-t4" style="left:50%; top:88%; font-size:42px;">因为</div>
+        <div class="att-token" id="s6-t5" style="left:15%; top:68%; font-size:42px;">它</div>
+        <div class="att-token" id="s6-t6" style="left:15%; top:35%; font-size:42px;">累了</div>
+
+        <!-- head badges -->
+        <div class="tag" id="s6-b1" style="position:absolute; left:50%; top:-30px; transform:translateX(-50%); color:#CC785C;">H E A D · 1  语 法</div>
+        <div class="tag" id="s6-b2" style="position:absolute; left:50%; top:-30px; transform:translateX(-50%); color:#E8A07A;">H E A D · 2  指 代</div>
+        <div class="tag" id="s6-b3" style="position:absolute; left:50%; top:-30px; transform:translateX(-50%); color:#8B7E72;">H E A D · 3  位 置</div>
+        <div class="tag" id="s6-b4" style="position:absolute; left:50%; top:-30px; transform:translateX(-50%); color:#F5EFE6;">H E A D · 4  语 义</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       S7 · 45-52s · 升华 · anchor (opacity:0)
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="scene clip bg-cream" id="s7"
+       data-start="45" data-duration="7" data-track-index="0"
+       style="opacity:0;">
+    <div class="grain"></div>
+
+    <div class="s7-bg-words" id="s7-bg">
+      <span class="s7-bg-word" style="left:5%;  top:12%;">attention</span>
+      <span class="s7-bg-word" style="left:62%; top:18%;">猫</span>
+      <span class="s7-bg-word" style="left:18%; top:28%;">query</span>
+      <span class="s7-bg-word" style="left:70%; top:42%;">它</span>
+      <span class="s7-bg-word" style="left:8%;  top:55%;">key</span>
+      <span class="s7-bg-word" style="left:55%; top:62%;">value</span>
+      <span class="s7-bg-word" style="left:15%; top:78%;">垫子</span>
+      <span class="s7-bg-word" style="left:65%; top:86%;">累了</span>
+    </div>
+
+    <div class="scene-content">
+      <div class="s7-main">
+        <div class="s7-line1" id="s7-l1">它 不 是 在 「记 住」</div>
+        <div class="s7-line2" id="s7-l2">而 是 ， <span class="h">同 时 看 见 一 切</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       S8 · 52-57s · READ vs SEE · non-anchor
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="scene clip bg-cream" id="s8"
+       data-start="52" data-duration="5" data-track-index="0"
+       style="visibility:hidden;">
+    <div class="grain"></div>
+
+    <div class="scene-content" style="gap:120px;">
+      <div class="label-dim" id="s8-eyebrow">本 质 上 ， 它 在 做 的 是 —</div>
+
+      <div class="s8-row" id="s8-row">
+        <div class="s8-col" id="s8-col-l">
+          <div class="s8-label">你 以 为</div>
+          <div class="s8-big cold" id="s8-read">READ</div>
+        </div>
+        <div class="s8-divider" id="s8-div"></div>
+        <div class="s8-col" id="s8-col-r">
+          <div class="s8-label">其 实 是</div>
+          <div class="s8-big hot" id="s8-see">SEE</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       S9 · 57-60s · Slogan + handle · non-anchor
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="scene clip bg-dark" id="s9"
+       data-start="57" data-duration="3" data-track-index="0"
+       style="visibility:hidden;">
+    <div class="glow-orb" id="s9-orb" style="width:800px;height:800px;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--accent);opacity:0.18;"></div>
+    <div class="grain"></div>
+    <div class="vignette"></div>
+
+    <div class="scene-content">
+      <div class="s9-slogan" id="s9-slogan">
+        用 <em>A I 的 眼 睛</em><br />
+        重 新 理 解<br />
+        你 以 为 已 经 懂 的 一 切
+      </div>
+    </div>
+
+    <div class="s9-handle">
+      <div class="s9-handle-name" id="s9-name">@ 用 A I 的 眼 睛</div>
+      <div class="s9-handle-tag"  id="s9-tag">A I  科 普  ·  S 0 1 E 0 1</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- GSAP runtime -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="./script.js"></script>
+
+</body>
+</html>

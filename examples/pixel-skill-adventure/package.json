@@ -1,0 +1,15 @@
+{
+  "name": "skill-timeline-demo",
+  "version": "1.0.0",
+  "description": "横版像素游戏风格的开场/转场动画：粉色小人沿地面奔跑，依次通过 5 个知识点节点 （是什么 / 区别 / 创建 / 安装 / 写好·邪修），每到一个节点就升旗、点亮、吃掉漂浮西瓜、 弹出搞笑台词，最后 LEVEL CLEAR。用于视频里的\"目录/进度\"转场。",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "playwright-core": "^1.48.0"
+  }
+}
