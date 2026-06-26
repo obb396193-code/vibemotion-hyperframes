@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>UI 界面库 · 组合示例（开场对话 → 编辑器 → 终端 → 浏览器揭示）</title>
+<!--
+  这是一个「把多个不同界面拼成一条片」的最小总装文件（master / index.html）。
+  顶层 #stage 是 1920×1080 画布；每个 <div data-composition-src=...> 挂一个 ui-library 里的子界面。
+  顶层 GSAP 时间线只管「接缝转场」（淡入淡出 / 模糊推走 / zoom-through），子界面各自有自己的内部动画。
+
+  ⚠ 渲染说明：
+   - 子界面用相对路径引用，渲染时把本文件和它引用的子界面放同一层级即可。
+   - data-start / data-duration 单位是秒；data-track-index 决定层级（大的在上）。
+   - 子界面是 <template> 片段，HF 会按 data-composition-src 加载并实例化。
+   - 跑：cd 到本目录，npx hyperframes render . -o demo.mp4 -w 2 --resolution landscape
+-->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<style>
+  html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:#0b0b0b;}
+  #stage{position:relative;width:1920px;height:1080px;overflow:hidden;background:#0b0b0b;}
+  /* 每个 section 铺满画布；z-index 由 data-track-index 控制（越大越靠上，转场时后来的盖前面的） */
+  #sec-chat   {position:absolute;inset:0;z-index:1;will-change:transform,filter,opacity;}
+  #sec-editor {position:absolute;inset:0;z-index:2;will-change:transform,filter,opacity;}
+  #sec-term   {position:absolute;inset:0;z-index:3;will-change:transform,filter,opacity;}
+  #sec-browser{position:absolute;inset:0;z-index:4;will-change:transform,filter,opacity;}
+</style>
+</head>
+<body>
+<div id="stage" data-composition-id="ui-demo" data-width="1920" data-height="1080" data-start="0" data-duration="15">
+
+  <!-- ⚠ 关键：每个 slot 的 data-composition-id 必须等于「被引用子界面 <template> 内部那个 div 的
+       data-composition-id」(不是随便起名)。写错=HF 找不到子时间线=整段渲染白屏。
+       (例：claude-composer-thinking.html 内部 id 是 chat-response，这里就得写 chat-response) -->
+
+  <!-- 1 · 开场：Claude 对话/composer 输入界面（暖色纸张主题） -->
+  <div id="sec-chat"    data-composition-id="chat-response"  data-composition-src="claude-code-chat/claude-composer-thinking.html"
+       data-start="0"    data-duration="5.0" data-track-index="1"></div>
+
+  <!-- 2 · 切到 VS Code / 代码编辑器（暗色，带 diff 高亮 + 播放器外壳） -->
+  <div id="sec-editor"  data-composition-id="feature-code"   data-composition-src="vscode-editor/code-editor-diff-player.html"
+       data-start="4.6"  data-duration="3.0" data-track-index="2"></div>
+
+  <!-- 3 · 切到终端跑命令（暗色，CLI 渲染进度条） -->
+  <div id="sec-term"    data-composition-id="worker"         data-composition-src="terminal/terminal-render-progress.html"
+       data-start="7.3"  data-duration="4.6" data-track-index="3"></div>
+
+  <!-- 4 · 收尾：浏览器揭示（GitHub PR 浏览器界面） -->
+  <div id="sec-browser" data-composition-id="pr-scroll"      data-composition-src="github-pr/pr-browser-files-changed.html"
+       data-start="11.6" data-duration="3.2" data-track-index="4"></div>
+
+  <!-- 音频可选：加 audio 元素挂 BGM / 打字声 / 点击声（写法见 README 第 2 节，src 要指向真实存在的 mp3） -->
+</div>
+
+<script>
+  // 顶层只做接缝转场。子界面的内部时间线由 HF 自动驱动（各自 window.__timelines[id]）。
+  window.__timelines = window.__timelines || {};
+  var tl = gsap.timeline({paused:true});
+
+  // 初始：只第 1 段可见
+  tl.set('#sec-editor',{opacity:0},0);
+  tl.set('#sec-term',{opacity:0},0);
+  tl.set('#sec-browser',{opacity:0},0);
+
+  // 接缝 1（对话 → 编辑器 @4.6）：旧场轻缩+模糊推走，新场交叉淡入
+  tl.to('#sec-chat',{opacity:0,scale:.96,filter:'blur(8px)',duration:.45,ease:'power2.in'},4.45);
+  tl.to('#sec-editor',{opacity:1,duration:.42,ease:'power2.out'},4.6);
+  tl.set('#sec-chat',{opacity:0},5.05);
+
+  // 接缝 2（编辑器 → 终端 @7.3）：zoom-through 穿越
+  tl.to('#sec-editor',{opacity:0,scale:1.08,filter:'blur(14px)',duration:.42,ease:'power3.in'},7.1);
+  tl.fromTo('#sec-term',{opacity:0,scale:.97},{opacity:1,scale:1,duration:.5,ease:'expo.out'},7.15);
+  tl.set('#sec-editor',{opacity:0},7.6);
+
+  // 接缝 3（终端 → 浏览器 @11.6）：淡入 + 轻微下沉揭示
+  tl.to('#sec-term',{opacity:0,yPercent:-4,filter:'blur(8px)',duration:.45,ease:'power2.in'},11.45);
+  tl.fromTo('#sec-browser',{opacity:0,yPercent:3},{opacity:1,yPercent:0,duration:.5,ease:'power3.out'},11.6);
+  tl.set('#sec-term',{opacity:0},12.1);
+
+  window.__timelines["ui-demo"] = tl;
+</script>
+</body>
+</html>

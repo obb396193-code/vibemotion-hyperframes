@@ -16,6 +16,29 @@
 ## 进阶 B · 真界面做成动画（扒真字体 + 真图标 + 子合成组装）
 > 来源：拆 `源码参考/hyperframes-launches/spacex-launch/`。核心：**不截图，手写 HTML/CSS 把真界面复刻成动画**，所以又像真又**矢量超清**。音效 / 假鼠标是**可选加分项**（见末节，想用就用，非必须）。
 
+### 0) 「规范」从哪来（颜色/字体/图标/版式 = 设计 token）
+做某个产品的拟真界面，先得有它的**设计规范**。三种来源，按情况选：
+- **A. 已有现成规范** → 直接用。例：「Claude 风」的暖橙 `#CC785C`+米底+衬线，技能里 `claude-design-spec.md` 已收录，不用再扒。
+- **B. 扒真站**（产品有网页，但你没规范）→ 去真站扒四样：
+  - **颜色/token**：devtools 读它的 CSS 变量(`:root{--xxx}`，很多产品色板直接在这)或 `getComputedStyle`；或截图吸管取色。工具:**chrome-devtools MCP** 的 `evaluate_script` 读样式、`Skill: firecrawl-scrape` 取它的 CSS。
+  - **字体** → woff2（见下 ①）；**图标** → inline SVG（见下 ②）；**间距/圆角/阴影/版式** → 读它 CSS 或截图量。
+- **C. 复刻**（产品是终端/CLI/桌面 App，没网页可爬）→ 照它**真实长相手复刻**：参考真实截图 + 已知特征，对齐色板/结构/字体。例：做 Claude Code 终端——没有规范文件，照真实 Claude Code（深色 + ✻Welcome + `⏺`工具调用 + 橙 `#D97757`）复刻，**字体扒了真 JetBrains Mono**。
+> 换任何产品（Cursor / ChatGPT / VS Code…）都走这条：A 有现成就用，没有就 B 扒真站、C 复刻。**关键是颜色/字体/图标/版式都对齐到真产品，别凭感觉编。**
+
+> **🔴 CHECKPOINT · 必停问用户「规范来源」**：做拟真界面**前**，先问用户两件事 → ①这是什么产品的界面？②规范从哪来（**A 技能已有** / **B 真站可爬** / **C 没网页要复刻**）？然后**带用户一步步把规范扒出来、列给 ta 确认，再动手搭**：
+> - 选 **B**：我去开它网页 + chrome-devtools 读 CSS 变量/computed style → 把**色板 + 字体 + 图标**列出来给你确认；
+> - 选 **C**：我照真实截图复刻 → 把**复刻的色板 + 扒到的字体**列出来给你确认；
+> - 确认规范后才进「子合成 + 组装」。**别跳过这步直接凭感觉做**——上一版 Claude Code 终端就是没对齐真 token 才"不够像"。
+
+#### 已扒规范 · Claude Code 界面 token（实测自官方 `cloud-render-launch/opener.html`，下次=来源 A 直接用）
+- **配色**：窗 `#1D1F1F`／输入框 `#2C2C2B`，边框 `#3a3a38`，正文 `#E6E2D6`／`#EFEADD`，次要 `#7C7B73`／`#8C8B83`；强调橙(caret/✻) `#D97757`，薄荷成功色 `#3CE6AC`，Auto 徽章 `#CAA43E` on `rgba(202,164,62,.16)`，spinner orb 蓝 `#5A9BE6`，红绿灯 `#FF5F57/#FEBC2E/#28C840`。
+- **字体**：Hanken Grotesk（界面）；终端正文/代码可换 JetBrains Mono。
+- **结构**：窗(红绿灯条)→ feed(右对齐用户气泡 + 左对齐 AI 回复)→ composer = 芯片行(Local/CC + SVG) + 输入框(文字 + 橙 caret `▏` + 右 `↵`) + 状态行(Auto · ＋ · Opus 4.8 · High · 旋转 orb)。
+- **尺寸**：**全用 `cqw/cqh`**（容器百分比），别用 px——这是"比例精准、像真"的关键。
+- **细节**：红绿灯用真 macOS 色；orb 是 CSS border 旋转环；caret 用 `steps(1)` yoyo 闪；要更生动可加像素吉祥物（`<video>` 贴输入框顶边 + 渐隐 mask）。
+
+> 📦 **先翻界面库,别从零做**：`assets/ui-library/`（搬自官方 launches 的真界面，按类型分：claude-code-chat / terminal / vscode-editor / browser / github-pr / codex…）。**要的界面库里有就直接复用**（甚至多个界面用 `data-composition-src` 组合成一条片：开场 Claude Code 对话 → 切 VS Code → 切终端 → 浏览器揭示）；库里没有，才按 `ui-spec-standard.md` 的标准模板去**扒新界面**，扒完存进 `ui-library/<界面>/SPEC.md` 沉淀为「来源 A」。
+
 ### 1) 扒真站的「真字体」（字一模一样的关键）
 - 找字体：打开真站 → 看它 CSS 里的 `@font-face{ src:url(...woff2) }`，或 devtools Network 面板筛 `font` 看加载了哪些 woff2。**可用 `Skill: firecrawl-scrape` 抓它的 CSS/HTML，或 chrome-devtools MCP 看 network。**
 - 下下来：`curl -sL <woff2地址>`（**走代理**：`export all_proxy=http://127.0.0.1:12000 https_proxy=… http_proxy=…`）放进合成的 `fonts/`。
